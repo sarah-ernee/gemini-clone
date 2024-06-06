@@ -3,7 +3,7 @@
   display: inline-flex;
   flex-direction: column;
   justify-content: space-between;
-  color: #f0f4f9;
+  background: #f0f4f9;
   padding: 25px 15px;
 }
 
