@@ -15,7 +15,9 @@ const ContextProvider = (props) => {
     setResultData("");
     setLoading(true);
     setShowResult(true);
-    setRecentPrompt(true);
+
+    // displays user prompt beside user icon
+    setRecentPrompt(input);
 
     const response = await run(input);
 
