@@ -17,6 +17,12 @@ const Main = () => {
     setInput,
   } = useContext(Context);
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      onSent();
+    }
+  };
+
   return (
     <div className="main">
       <div className="nav">
@@ -28,7 +34,11 @@ const Main = () => {
         {!showResult ? (
           <Greet />
         ) : (
-          <Result recentPrompt={recentPrompt} resultData={resultData} />
+          <Result
+            recentPrompt={recentPrompt}
+            resultData={resultData}
+            loading={loading}
+          />
         )}
 
         <div className="main-bottom">
@@ -37,6 +47,7 @@ const Main = () => {
               type="text"
               placeholder="Enter a prompt here"
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => handleKeyDown(e)}
               value={input}
             />
             <div>
