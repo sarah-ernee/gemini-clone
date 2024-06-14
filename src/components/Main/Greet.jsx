@@ -1,7 +1,30 @@
 import { assets } from "../../assets/assets";
 import "./Main.css";
 
+import { useContext } from "react";
+import { Context } from "../../context/Context";
+
 const Greet = () => {
+  const { setInput } = useContext(Context);
+  const cardsData = [
+    {
+      prompt: "Suggest beautiful places to see on an upcoming trip",
+      icon: assets.compass_icon,
+    },
+    {
+      prompt: "Briefly summarize this concept: urban planning",
+      icon: assets.bulb_icon,
+    },
+    {
+      prompt: "Brainstorm team bonding activities for our work retreat",
+      icon: assets.message_icon,
+    },
+    {
+      prompt: "Improve readability of code",
+      icon: assets.code_icon,
+    },
+  ];
+
   return (
     <div>
       <div className="greet">
@@ -11,22 +34,18 @@ const Greet = () => {
         <p>How can I help you today?</p>
       </div>
       <div className="cards">
-        <div className="card">
-          <p>Suggest beautiful places to see on an upcoming trip</p>
-          <img src={assets.compass_icon} alt="" />
-        </div>
-        <div className="card">
-          <p>Briefly summarize this concept: urban planning</p>
-          <img src={assets.bulb_icon} alt="" />
-        </div>
-        <div className="card">
-          <p>Brainstorm team bonding activities for our work retreat</p>
-          <img src={assets.message_icon} alt="" />
-        </div>
-        <div className="card">
-          <p>Improve the readability of the following code</p>
-          <img src={assets.code_icon} alt="" />
-        </div>
+        {cardsData.map((card, index) => (
+          <div
+            className="card"
+            key={index}
+            onClick={() => {
+              setInput(card.prompt);
+            }}
+          >
+            <p>{card.prompt}</p>
+            <img src={card.icon} />
+          </div>
+        ))}
       </div>
     </div>
   );

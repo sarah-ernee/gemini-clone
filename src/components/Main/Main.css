@@ -45,6 +45,7 @@
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 15px;
   padding: 20px;
+  padding-bottom: 130px;
 }
 
 .main .card {
@@ -181,4 +182,23 @@
   font-size: 17px;
   font-weight: 300px;
   line-height: 1.8;
+}
+
+@media (max-width: 600px) {
+  .main-bottom input {
+    flex: none;
+    width: 150px;
+  }
+
+  .main-bottom img {
+    width: 20px;
+  }
+
+  .search-box {
+    padding: 5px 10px;
+  }
+
+  .search-box {
+    gap: 5px;
+  }
 }
