@@ -15,10 +15,14 @@ const Main = () => {
     resultData,
     input,
     setInput,
+    stopGeneration,
   } = useContext(Context);
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && e.shiftKey) {
+      e.preventDefault();
+      setInput((prevInput) => prevInput + "\n");
+    } else if (e.key === "Enter") {
       onSent();
     }
   };
@@ -27,7 +31,7 @@ const Main = () => {
     <div className="main">
       <div className="nav">
         <p>Gemini</p>
-        <img src={assets.user_icon} alt="" />
+        <img src={assets.user_icon} />
       </div>
 
       <div className="main-container">
@@ -43,17 +47,19 @@ const Main = () => {
 
         <div className="main-bottom">
           <div className="search-box">
-            <input
-              type="text"
+            <textarea
               placeholder="Enter a prompt here"
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => handleKeyDown(e)}
               value={input}
+              rows={Math.min(5, input.split("\n").length)}
             />
             <div>
-              <img src={assets.gallery_icon} alt="" />
-              <img src={assets.mic_icon} alt="" />
-              <img src={assets.send_icon} alt="" onClick={() => onSent()} />
+              {loading || showResult ? (
+                <img src={assets.stop_icon} onClick={() => stopGeneration()} />
+              ) : (
+                <img src={assets.send_icon} onClick={() => onSent()} />
+              )}
             </div>
           </div>
 

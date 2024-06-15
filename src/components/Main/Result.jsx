@@ -7,12 +7,12 @@ const Result = ({ recentPrompt, resultData, loading }) => {
   return (
     <div className="result">
       <div className="result-title">
-        <img src={assets.user_icon} alt="" />
+        <img src={assets.user_icon} />
         <p>{recentPrompt}</p>
       </div>
 
       <div className="result-data">
-        <img src={assets.gemini_icon} alt="" />
+        <img src={assets.gemini_icon} />
         {loading ? (
           <>
             <div className="loader">

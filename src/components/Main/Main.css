@@ -100,13 +100,15 @@
   cursor: pointer;
 }
 
-.search-box input {
+.search-box textarea {
   flex: 1;
   background: transparent;
   border: none;
   outline: none;
   padding: 8px;
   font-size: 18px;
+  resize: none;
+  min-height: 40px;
 }
 
 .search-box div {

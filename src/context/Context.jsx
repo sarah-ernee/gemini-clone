@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useRef } from "react";
 import PropTypes from "prop-types";
 
 import run from "../config/gemini";
@@ -12,39 +12,63 @@ const ContextProvider = (props) => {
   const [loading, setLoading] = useState(false);
   const [resultData, setResultData] = useState("");
 
+  const isCancelled = useRef(false);
+
   const typingEffect = (index, nextWord) => {
-    setTimeout(function () {
-      setResultData((prev) => prev + nextWord);
-    }, 75 * index);
+    if (!isCancelled.current) {
+      setTimeout(function () {
+        setResultData((prev) => prev + nextWord);
+      }, 75 * index);
+    }
   };
 
-  const onSent = async () => {
+  const onSent = async (prompt) => {
     setResultData(""); // clear previous prompts
     setLoading(true);
     setShowResult(true);
+    isCancelled.current = false;
 
     setRecentPrompt(input); // displays user prompt beside user icon
     setPrevPrompt((prev) => [...prev, input]); // store history of prompts
 
     // formatting result - bold and newlines
-    const response = await run(input);
-    let responseArray = response.split("**");
-    let boldedResponse;
-    for (let i = 0; i < responseArray.length; i++) {
-      if (i === 0 || i % 2 != 1) {
-        boldedResponse += responseArray[i];
-      } else {
-        boldedResponse += "<b>" + responseArray[i] + "</b>";
-      }
+    let response;
+    if (prompt !== undefined) {
+      response = await run(prompt);
+      setRecentPrompt(prompt);
+    } else {
+      setPrevPrompt((prev) => [...prev, input]);
+      setRecentPrompt(input);
+      response = await run(input);
     }
-    let formattedResponse = boldedResponse.split("*").join("</br");
-    let newResponseArray = formattedResponse.split(" ");
-    for (let i = 0; i < newResponseArray.length; i++) {
-      const nextWord = newResponseArray[i];
-      typingEffect(i, nextWord + " ");
+
+    if (!isCancelled.current) {
+      let formattedResponse = response
+        .replace(/\*\*(.*?)\*\*/g, '<span style="font-weight: 550;">$1</span>')
+        .replace(/##(.*?)\n/g, "<h3>$1</h3>")
+        .replace(/^\*(.*?)$/gm, "<ul><li>$1</li></ul>")
+        .replace(/\n/g, "</br>");
+
+      // formattedResponse = formattedResponse.replace(/<\/ul>\n<ul>/g, "");
+
+      let newResponseArray = formattedResponse.split(" ");
+      for (let i = 0; i < newResponseArray.length; i++) {
+        const nextWord = newResponseArray[i];
+        typingEffect(i, nextWord + " ");
+      }
     }
 
     setInput(""); // clear input field
+    setLoading(false);
+  };
+
+  const newChat = () => {
+    setLoading(false);
+    setShowResult(false);
+  };
+
+  const stopGeneration = () => {
+    isCancelled.current = true;
     setLoading(false);
   };
 
@@ -59,7 +83,8 @@ const ContextProvider = (props) => {
     loading,
     resultData,
     onSent,
-    // newChat,
+    newChat,
+    stopGeneration,
   };
 
   return (
