@@ -11,13 +11,20 @@ const ContextProvider = (props) => {
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resultData, setResultData] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
 
   const isCancelled = useRef(false);
 
-  const typingEffect = (index, nextWord) => {
+  const typingEffect = (index, nextWord, totalWords) => {
     if (!isCancelled.current) {
+      if (index === 0) {
+        setIsTyping(true);
+      }
       setTimeout(function () {
         setResultData((prev) => prev + nextWord);
+        if (index === totalWords - 1) {
+          setIsTyping(false);
+        }
       }, 75 * index);
     }
   };
@@ -49,12 +56,12 @@ const ContextProvider = (props) => {
         .replace(/^\*(.*?)$/gm, "<ul><li>$1</li></ul>")
         .replace(/\n/g, "</br>");
 
-      // formattedResponse = formattedResponse.replace(/<\/ul>\n<ul>/g, "");
+      formattedResponse = formattedResponse.replace(/<\/ul>\n<ul>/g, "");
 
       let newResponseArray = formattedResponse.split(" ");
       for (let i = 0; i < newResponseArray.length; i++) {
         const nextWord = newResponseArray[i];
-        typingEffect(i, nextWord + " ");
+        typingEffect(i, nextWord + " ", newResponseArray.length);
       }
     }
 
@@ -70,6 +77,7 @@ const ContextProvider = (props) => {
   const stopGeneration = () => {
     isCancelled.current = true;
     setLoading(false);
+    setIsTyping(false);
   };
 
   const contextValue = {
@@ -84,6 +92,7 @@ const ContextProvider = (props) => {
     resultData,
     onSent,
     newChat,
+    isTyping,
     stopGeneration,
   };
 
