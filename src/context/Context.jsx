@@ -43,10 +43,12 @@ const ContextProvider = (props) => {
     if (prompt !== undefined) {
       response = await run(prompt);
       setRecentPrompt(prompt);
+      console.log("not undef");
     } else {
       setPrevPrompt((prev) => [...prev, input]);
       setRecentPrompt(input);
       response = await run(input);
+      console.log("def");
     }
 
     if (!isCancelled.current) {
@@ -65,7 +67,7 @@ const ContextProvider = (props) => {
       }
     }
 
-    setInput(""); // clear input field
+    setInput("");
     setLoading(false);
   };
 

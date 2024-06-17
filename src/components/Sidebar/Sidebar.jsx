@@ -5,40 +5,40 @@ import PropTypes from "prop-types";
 
 import { Context } from "../../context/Context";
 
+const Prompts = ({ onSent, prevPrompt, setRecentPrompt }) => {
+  const loadPrompt = async (prompt) => {
+    setRecentPrompt(prompt);
+    await onSent(prompt);
+  };
+
+  return (
+    <div className="recent">
+      <p className="recent-title">Recent</p>
+      {prevPrompt.map((item, index) => {
+        return (
+          <div
+            onClick={() => loadPrompt(item)}
+            className="recent-entry"
+            key={index}
+          >
+            <img src={assets.message_icon} />
+            <p>{item.slice(0, 18)}...</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+Prompts.propTypes = {
+  onSent: PropTypes.func.isRequired,
+  prevPrompt: PropTypes.array.isRequired,
+  setRecentPrompt: PropTypes.func.isRequired,
+};
+
 const Sidebar = () => {
   const [extended, setExtended] = useState(false);
   const { newChat, onSent, prevPrompt, setRecentPrompt } = useContext(Context);
-
-  const Prompts = ({ onSent, prevPrompt, setRecentPrompt }) => {
-    const loadPrompt = async (prompt) => {
-      setRecentPrompt(prompt);
-      await onSent(prompt);
-    };
-
-    return (
-      <div className="recent">
-        <p className="recent-title">Recent</p>
-        {prevPrompt.map((item, index) => {
-          return (
-            <div
-              onClick={() => loadPrompt(item)}
-              className="recent-entry"
-              key={index}
-            >
-              <img src={assets.message_icon} />
-              <p>{item.slice(0, 18)}...</p>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  Prompts.propTypes = {
-    onSent: PropTypes.func.isRequired,
-    prevPrompt: PropTypes.array.isRequired,
-    setRecentPrompt: PropTypes.func.isRequired,
-  };
 
   return (
     <div className="sidebar">
