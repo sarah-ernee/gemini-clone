@@ -21,34 +21,36 @@ const ContextProvider = (props) => {
         setIsTyping(true);
       }
       setTimeout(function () {
-        setResultData((prev) => prev + nextWord);
-        if (index === totalWords - 1) {
-          setIsTyping(false);
+        if (!isCancelled.current) {
+          // Check if cancelled
+          setResultData((prev) => prev + nextWord);
+          if (index === totalWords - 1) {
+            setIsTyping(false);
+          }
         }
       }, 75 * index);
     }
   };
 
   const onSent = async (prompt) => {
-    setResultData(""); // clear previous prompts
+    setResultData("");
     setLoading(true);
     setShowResult(true);
     isCancelled.current = false;
 
-    setRecentPrompt(input); // displays user prompt beside user icon
-    setPrevPrompt((prev) => [...prev, input]); // store history of prompts
-
-    // formatting result - bold and newlines
     let response;
+
+    // Clicking on an archived chat
     if (prompt !== undefined) {
       response = await run(prompt);
       setRecentPrompt(prompt);
-      console.log("not undef");
-    } else {
+    }
+
+    // New chat where onSent() is called without an arg
+    else {
       setPrevPrompt((prev) => [...prev, input]);
       setRecentPrompt(input);
       response = await run(input);
-      console.log("def");
     }
 
     if (!isCancelled.current) {

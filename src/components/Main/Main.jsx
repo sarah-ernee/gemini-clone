@@ -128,6 +128,8 @@ const Main = () => {
     }
   };
 
+  console.log("loading: ", loading, "typing: ", isTyping);
+
   return (
     <div className="main">
       <div className="nav">
@@ -155,7 +157,7 @@ const Main = () => {
             />
             <div>
               {loading || isTyping ? (
-                <img src={assets.stop_icon} onClick={stopGeneration} />
+                <img src={assets.stop_icon} onClick={() => stopGeneration()} />
               ) : (
                 <img src={assets.send_icon} onClick={() => onSent()} />
               )}
