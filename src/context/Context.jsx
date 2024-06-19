@@ -16,20 +16,21 @@ const ContextProvider = (props) => {
   const isCancelled = useRef(false);
 
   const typingEffect = (index, nextWord, totalWords) => {
-    if (!isCancelled.current) {
-      if (index === 0) {
-        setIsTyping(true);
-      }
-      setTimeout(function () {
-        if (!isCancelled.current) {
-          // Check if cancelled
-          setResultData((prev) => prev + nextWord);
-          if (index === totalWords - 1) {
-            setIsTyping(false);
-          }
+    setTimeout(() => {
+      if (!isCancelled.current) {
+        setResultData((prev) => prev + nextWord);
+
+        // Start typing at the start of results
+        if (index === 0) {
+          setIsTyping(true);
         }
-      }, 75 * index);
-    }
+
+        // Stop typing if at the end of results
+        else if (index === totalWords - 1) {
+          setIsTyping(false);
+        }
+      }
+    }, 75 * index);
   };
 
   const onSent = async (prompt) => {
