@@ -49,7 +49,7 @@ Greet.propTypes = {
   setInput: PropTypes.func.isRequired,
 };
 
-const Result = ({ recentPrompt, resultData, loading }) => {
+const Result = ({ prevPrompt, resultData, loading }) => {
   const resultRef = useRef(null);
   const [autoScroll, setAutoScroll] = useState(true);
 
@@ -83,37 +83,59 @@ const Result = ({ recentPrompt, resultData, loading }) => {
   }, [resultData, autoScroll]);
 
   return (
+    // <div className="result" ref={resultRef}>
+    //   <div className="result-title">
+    //     <img src={assets.user_icon} />
+    //     <p>{recentPrompt}</p>
+    //   </div>
+    //   <div className="result-data">
+    //     <img src={assets.gemini_icon} />
+    //     {loading ? (
+    //       <div className="loader">
+    //         <hr />
+    //         <hr />
+    //         <hr />
+    //       </div>
+    //     ) : (
+    //       <p dangerouslySetInnerHTML={{ __html: resultData }}></p>
+    //     )}
+    //   </div>
+    // </div>
     <div className="result" ref={resultRef}>
-      <div className="result-title">
-        <img src={assets.user_icon} />
-        <p>{recentPrompt}</p>
-      </div>
-      <div className="result-data">
-        <img src={assets.gemini_icon} />
-        {loading ? (
-          <div className="loader">
-            <hr />
-            <hr />
-            <hr />
+      {prevPrompt.map((prompt, index) => (
+        <div key={index} className="result-entry">
+          <div className="result-title">
+            <img src={assets.user_icon} />
+            <p>{prompt}</p>
           </div>
-        ) : (
-          <p dangerouslySetInnerHTML={{ __html: resultData }}></p>
-        )}
-      </div>
+          <div className="result-data">
+            <img src={assets.gemini_icon} />
+            {index === prevPrompt.length - 1 && loading ? (
+              <div className="loader">
+                <hr />
+                <hr />
+                <hr />
+              </div>
+            ) : (
+              <p dangerouslySetInnerHTML={{ __html: resultData[index] }}></p>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
 
 Result.propTypes = {
-  recentPrompt: PropTypes.string.isRequired,
-  resultData: PropTypes.string.isRequired,
+  prevPrompt: PropTypes.array.isRequired,
+  resultData: PropTypes.array.isRequired,
   loading: PropTypes.bool.isRequired,
 };
 
 const Main = () => {
   const {
     onSent,
-    recentPrompt,
+    prevPrompt,
     showResult,
     loading,
     resultData,
@@ -144,7 +166,7 @@ const Main = () => {
           <Greet setInput={setInput} />
         ) : (
           <Result
-            recentPrompt={recentPrompt}
+            prevPrompt={prevPrompt}
             resultData={resultData}
             loading={loading}
           />

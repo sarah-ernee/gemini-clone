@@ -7,7 +7,7 @@ export const Context = createContext();
 const ContextProvider = (props) => {
   const [input, setInput] = useState("");
   const [recentPrompt, setRecentPrompt] = useState("");
-  const [resultData, setResultData] = useState("");
+  const [resultData, setResultData] = useState([]);
 
   const [prevPrompt, setPrevPrompt] = useState([]);
 
@@ -17,7 +17,7 @@ const ContextProvider = (props) => {
 
   const isCancelled = useRef(false);
 
-  const typingEffect = (index, nextWord, totalWords) => {
+  const typingEffect = (index, nextWord, totalWords, responseIndex) => {
     if (isCancelled.current) {
       return;
     }
@@ -26,9 +26,26 @@ const ContextProvider = (props) => {
       setIsTyping(true);
     }
 
+    // setTimeout(() => {
+    //   if (!isCancelled.current) {
+    //     setResultData((prev) => prev + nextWord);
+    //     if (index === totalWords - 1) {
+    //       setIsTyping(false);
+    //     }
+    //   }
+    // }, 75 * index);
+
     setTimeout(() => {
       if (!isCancelled.current) {
-        setResultData((prev) => prev + nextWord);
+        setResultData((prevData) => {
+          const newData = [...prevData];
+          if (!newData[responseIndex]) {
+            newData[responseIndex] = "";
+          }
+          newData[responseIndex] += nextWord;
+          return newData;
+        });
+
         if (index === totalWords - 1) {
           setIsTyping(false);
         }
@@ -37,7 +54,6 @@ const ContextProvider = (props) => {
   };
 
   const onSent = async (prompt) => {
-    setResultData("");
     setLoading(true);
     setShowResult(true);
     isCancelled.current = false;
@@ -46,16 +62,22 @@ const ContextProvider = (props) => {
 
     // Clicking on an archived chat
     if (prompt !== undefined) {
-      response = await run(prompt);
       setRecentPrompt(prompt);
     }
 
     // New chat where onSent() is called without an arg
     else {
+      prompt = input;
+      // if (!prevPrompt.includes(prompt)) {
+      //   setPrevPrompt((prev) => [...prev, input]);
+      // }
+
+      // setRecentPrompt(input);
       setPrevPrompt((prev) => [...prev, input]);
       setRecentPrompt(input);
-      response = await run(input);
     }
+
+    response = await run(prompt);
 
     if (!isCancelled.current) {
       let formattedResponse = response
@@ -67,10 +89,13 @@ const ContextProvider = (props) => {
       formattedResponse = formattedResponse.replace(/<\/ul>\n<ul>/g, "");
 
       let newResponseArray = formattedResponse.split(" ");
+      const responseIndex = resultData.length;
       for (let i = 0; i < newResponseArray.length; i++) {
         const nextWord = newResponseArray[i];
-        typingEffect(i, nextWord + " ", newResponseArray.length);
+        typingEffect(i, nextWord + " ", newResponseArray.length, responseIndex);
       }
+
+      setResultData((prev) => [...prev, ""]);
     }
 
     setInput("");
@@ -80,6 +105,8 @@ const ContextProvider = (props) => {
   const newChat = () => {
     setLoading(false);
     setShowResult(false);
+
+    setPrevPrompt([]);
   };
 
   const stopGeneration = () => {
