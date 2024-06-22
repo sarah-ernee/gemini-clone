@@ -62,17 +62,26 @@ const Sidebar = () => {
       </div>
 
       <div className="bottom">
-        <div className="bottom-item recent-entry">
+        <div
+          className="bottom-item recent-entry"
+          onClick={() => setExtended((prev) => !prev)}
+        >
           <img src={assets.question_icon} />
           {extended ? <p>Help</p> : null}
         </div>
 
-        <div className="bottom-item recent-entry">
+        <div
+          className="bottom-item recent-entry"
+          onClick={() => setExtended((prev) => !prev)}
+        >
           <img src={assets.history_icon} />
           {extended ? <p>Activity</p> : null}
         </div>
 
-        <div className="bottom-item recent-entry">
+        <div
+          className="bottom-item recent-entry"
+          onClick={() => setExtended((prev) => !prev)}
+        >
           <img src={assets.setting_icon} />
           {extended ? <p>Settings</p> : null}
         </div>

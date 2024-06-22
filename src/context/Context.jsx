@@ -7,26 +7,29 @@ export const Context = createContext();
 const ContextProvider = (props) => {
   const [input, setInput] = useState("");
   const [recentPrompt, setRecentPrompt] = useState("");
+  const [resultData, setResultData] = useState("");
+
   const [prevPrompt, setPrevPrompt] = useState([]);
+
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [resultData, setResultData] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
   const isCancelled = useRef(false);
 
   const typingEffect = (index, nextWord, totalWords) => {
+    if (isCancelled.current) {
+      return;
+    }
+
+    if (index === 0) {
+      setIsTyping(true);
+    }
+
     setTimeout(() => {
       if (!isCancelled.current) {
         setResultData((prev) => prev + nextWord);
-
-        // Start typing at the start of results
-        if (index === 0) {
-          setIsTyping(true);
-        }
-
-        // Stop typing if at the end of results
-        else if (index === totalWords - 1) {
+        if (index === totalWords - 1) {
           setIsTyping(false);
         }
       }

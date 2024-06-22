@@ -56,9 +56,14 @@ const Result = ({ recentPrompt, resultData, loading }) => {
   useEffect(() => {
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = resultRef.current;
+
+      // If user already scrolled to bottom + result still generating, then auto scroll
       if (scrollHeight - scrollTop === clientHeight) {
         setAutoScroll(true);
-      } else {
+      }
+
+      // Allow user to scroll while result is generating
+      else {
         setAutoScroll(false);
       }
     };
@@ -127,8 +132,6 @@ const Main = () => {
       onSent();
     }
   };
-
-  console.log("loading: ", loading, "typing: ", isTyping);
 
   return (
     <div className="main">
