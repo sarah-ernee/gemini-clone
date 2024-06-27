@@ -77,3 +77,122 @@
     display: none;
   }
 }
+
+.sidebar .dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.sidebar .dialog {
+  background: white;
+  padding: 40px 60px;
+  border-radius: 20px;
+  width: 800px;
+  max-width: 80%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar .dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sidebar .dialog-body {
+  margin-top: 10px;
+}
+
+.sidebar .dialog-body .subtitle {
+  font-weight: 300;
+  font-style: italic;
+  color: grey;
+  margin-bottom: 20px;
+}
+
+.sidebar .dialog-text {
+  letter-spacing: normal;
+  line-height: 2;
+  padding: 20px 0;
+  text-align: justify;
+}
+
+.sidebar .close-button {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: red;
+}
+
+.sidebar hr {
+  margin: 20px 0 20px 0;
+}
+
+.sidebar .settings {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+}
+
+.sidebar .settings p {
+  font-weight: 600;
+}
+
+.sidebar .action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sidebar .settings-button {
+  border-radius: 20px;
+  border: white 1px solid;
+  padding: 12px;
+  background-color: #ef4444;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sidebar .cancel-settings-button {
+  border-radius: 20px;
+  border: grey 1px solid;
+  padding: 12px;
+  background-color: white;
+  color: black;
+
+  font-size: 14px;
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.sidebar .settings select {
+  border: none;
+  font-size: 16px;
+  font-weight: 350;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background-color: white;
+  outline: none;
+}
+
+.sidebar .settings select:hover {
+  background-color: #f0f0f0;
+}
+
+.sidebar .settings option {
+  padding: 20px;
+  margin: 20px 20px;
+}

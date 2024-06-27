@@ -77,30 +77,20 @@ const Result = ({ prevPrompt, resultData, loading }) => {
   }, []);
 
   useEffect(() => {
-    if (autoScroll && resultRef.current) {
-      resultRef.current.scrollTop = resultRef.current.scrollHeight;
-    }
+    // if (autoScroll && resultRef.current) {
+    //   resultRef.current.scrollTop = resultRef.current.scrollHeight;
+    // }
+    const scrollToBottom = () => {
+      if (autoScroll && resultRef.current) {
+        resultRef.current.scrollTop = resultRef.current.scrollHeight;
+      }
+    };
+
+    const timeout = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeout);
   }, [resultData, autoScroll]);
 
   return (
-    // <div className="result" ref={resultRef}>
-    //   <div className="result-title">
-    //     <img src={assets.user_icon} />
-    //     <p>{recentPrompt}</p>
-    //   </div>
-    //   <div className="result-data">
-    //     <img src={assets.gemini_icon} />
-    //     {loading ? (
-    //       <div className="loader">
-    //         <hr />
-    //         <hr />
-    //         <hr />
-    //       </div>
-    //     ) : (
-    //       <p dangerouslySetInnerHTML={{ __html: resultData }}></p>
-    //     )}
-    //   </div>
-    // </div>
     <div className="result" ref={resultRef}>
       {prevPrompt.map((prompt, index) => (
         <div key={index} className="result-entry">
@@ -189,8 +179,7 @@ const Main = () => {
             </div>
           </div>
           <p className="bottom-info">
-            Gemini may display inaccurate info, including about people, so
-            double check its responses. Your privacy and Gemini Apps
+            Gemini can make mistakes. Check important info.
           </p>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { createContext, useState, useRef } from "react";
+import { createContext, useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 
 import run from "../config/gemini";
@@ -10,12 +10,14 @@ const ContextProvider = (props) => {
   const [resultData, setResultData] = useState([]);
 
   const [prevPrompt, setPrevPrompt] = useState([]);
-
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
 
+  const [isTyping, setIsTyping] = useState(false);
   const isCancelled = useRef(false);
+
+  const [sidebarPrompt, setSidebarPrompt] = useState([]);
+  const [isNewChat, setIsNewChat] = useState(false);
 
   const typingEffect = (index, nextWord, totalWords, responseIndex) => {
     if (isCancelled.current) {
@@ -25,15 +27,6 @@ const ContextProvider = (props) => {
     if (index === 0) {
       setIsTyping(true);
     }
-
-    // setTimeout(() => {
-    //   if (!isCancelled.current) {
-    //     setResultData((prev) => prev + nextWord);
-    //     if (index === totalWords - 1) {
-    //       setIsTyping(false);
-    //     }
-    //   }
-    // }, 75 * index);
 
     setTimeout(() => {
       if (!isCancelled.current) {
@@ -53,26 +46,28 @@ const ContextProvider = (props) => {
     }, 75 * index);
   };
 
+  useEffect(() => {
+    if (isNewChat) {
+      setSidebarPrompt((prev) => [...prev, input]);
+      console.log("triggered");
+    }
+  }, [isNewChat, input]);
+
   const onSent = async (prompt) => {
     setLoading(true);
     setShowResult(true);
     isCancelled.current = false;
 
     let response;
-
     // Clicking on an archived chat
     if (prompt !== undefined) {
       setRecentPrompt(prompt);
-    }
+    } else {
+      if (sidebarPrompt.length === 0) {
+        setIsNewChat(true);
+      }
 
-    // New chat where onSent() is called without an arg
-    else {
       prompt = input;
-      // if (!prevPrompt.includes(prompt)) {
-      //   setPrevPrompt((prev) => [...prev, input]);
-      // }
-
-      // setRecentPrompt(input);
       setPrevPrompt((prev) => [...prev, input]);
       setRecentPrompt(input);
     }
@@ -100,6 +95,7 @@ const ContextProvider = (props) => {
 
     setInput("");
     setLoading(false);
+    setIsNewChat(false);
   };
 
   const newChat = () => {
@@ -123,12 +119,14 @@ const ContextProvider = (props) => {
     prevPrompt,
     setPrevPrompt,
     showResult,
+    setShowResult,
     loading,
     resultData,
     onSent,
     newChat,
     isTyping,
     stopGeneration,
+    sidebarPrompt,
   };
 
   return (
