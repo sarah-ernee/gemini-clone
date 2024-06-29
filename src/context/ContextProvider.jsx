@@ -1,10 +1,8 @@
-import { createContext, useState, useRef, useEffect } from "react";
-import PropTypes from "prop-types";
-
+import { useState, useRef, useEffect } from "react";
 import run from "../config/gemini";
-export const Context = createContext();
+import { Context } from "./Context";
 
-const ContextProvider = (props) => {
+export const ContextProvider = (props) => {
   const [input, setInput] = useState("");
   const [recentPrompt, setRecentPrompt] = useState("");
   const [resultData, setResultData] = useState([]);
@@ -47,10 +45,11 @@ const ContextProvider = (props) => {
   };
 
   useEffect(() => {
-    if (isNewChat && sidebarPrompt.length === 0) {
+    if (isNewChat) {
       setSidebarPrompt((prev) => [...prev, input]);
+      console.log("triggered");
     }
-  }, [isNewChat, input, sidebarPrompt]);
+  }, [isNewChat, input]);
 
   const onSent = async (prompt) => {
     setLoading(true);
@@ -67,9 +66,6 @@ const ContextProvider = (props) => {
     else {
       if (sidebarPrompt.length === 0) {
         setIsNewChat(true);
-      } else if (isNewChat) {
-        setPrevPrompt([]);
-        setSidebarPrompt((prev) => [...prev, input]);
       }
 
       prompt = input;
@@ -107,6 +103,9 @@ const ContextProvider = (props) => {
     setIsNewChat(true);
     setLoading(false);
     setShowResult(false);
+
+    // setPrevPrompt([]);
+    setSidebarPrompt((prev) => [...prev]);
   };
 
   const stopGeneration = () => {
@@ -137,9 +136,3 @@ const ContextProvider = (props) => {
     <Context.Provider value={contextValue}>{props.children}</Context.Provider>
   );
 };
-
-ContextProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
-
-export default ContextProvider;

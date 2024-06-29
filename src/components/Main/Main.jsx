@@ -133,6 +133,7 @@ const Main = () => {
     setInput,
     stopGeneration,
     isTyping,
+    sidebarPrompt,
   } = useContext(Context);
 
   const handleKeyDown = (e) => {
@@ -144,6 +145,9 @@ const Main = () => {
       onSent();
     }
   };
+
+  console.log("sidebar:", sidebarPrompt);
+  console.log("previous:", prevPrompt);
 
   return (
     <div className="main">
