@@ -1,7 +1,6 @@
 import "./Sidebar.css";
 import { assets } from "../../assets/assets";
 import { useState, useContext } from "react";
-import PropTypes from "prop-types";
 
 import { Context } from "../../context/Context";
 
@@ -49,12 +48,6 @@ const HelpDialog = ({ show, handleClose, setShowConfirm }) => {
   );
 };
 
-HelpDialog.propTypes = {
-  show: PropTypes.bool.isRequired,
-  handleClose: PropTypes.func.isRequired,
-  setShowConfirm: PropTypes.func.isRequired,
-};
-
 const ConfirmDialog = ({
   showConfirm,
   setShowConfirm,
@@ -100,13 +93,6 @@ const ConfirmDialog = ({
   );
 };
 
-ConfirmDialog.propTypes = {
-  setPrevPrompt: PropTypes.func.isRequired,
-  showConfirm: PropTypes.bool.isRequired,
-  setShowConfirm: PropTypes.func.isRequired,
-  setShowHelp: PropTypes.func.isRequired,
-};
-
 const Prompts = ({ setShowResult, sidebarPrompt, setRecentPrompt }) => {
   const loadPrompt = async (prompt) => {
     setRecentPrompt(prompt);
@@ -131,12 +117,6 @@ const Prompts = ({ setShowResult, sidebarPrompt, setRecentPrompt }) => {
       })}
     </div>
   );
-};
-
-Prompts.propTypes = {
-  setShowResult: PropTypes.bool.isRequired,
-  sidebarPrompt: PropTypes.array.isRequired,
-  setRecentPrompt: PropTypes.func.isRequired,
 };
 
 const Sidebar = () => {

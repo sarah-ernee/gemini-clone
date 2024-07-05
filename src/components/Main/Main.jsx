@@ -2,7 +2,6 @@ import "./Main.css";
 import { assets } from "../../assets/assets";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Context } from "../../context/Context";
-import PropTypes from "prop-types";
 
 const Greet = ({ setInput }) => {
   const cardsData = [
@@ -45,10 +44,6 @@ const Greet = ({ setInput }) => {
   );
 };
 
-Greet.propTypes = {
-  setInput: PropTypes.func.isRequired,
-};
-
 const Result = ({ prevPrompt, resultData, loading }) => {
   const resultRef = useRef(null);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -57,13 +52,10 @@ const Result = ({ prevPrompt, resultData, loading }) => {
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = resultRef.current;
 
-      // If user already scrolled to bottom + result still generating, then auto scroll
-      if (scrollHeight - scrollTop === clientHeight) {
+      if (scrollHeight - scrollTop <= clientHeight + 10) {
         setAutoScroll(true);
-      }
-
-      // Allow user to scroll while result is generating
-      else {
+        console.log("t");
+      } else {
         setAutoScroll(false);
       }
     };
@@ -77,17 +69,14 @@ const Result = ({ prevPrompt, resultData, loading }) => {
   }, []);
 
   useEffect(() => {
-    // if (autoScroll && resultRef.current) {
-    //   resultRef.current.scrollTop = resultRef.current.scrollHeight;
-    // }
     const scrollToBottom = () => {
-      if (autoScroll && resultRef.current) {
+      if (autoScroll) {
         resultRef.current.scrollTop = resultRef.current.scrollHeight;
+        console.log("w");
       }
     };
 
-    const timeout = setTimeout(scrollToBottom, 100);
-    return () => clearTimeout(timeout);
+    scrollToBottom();
   }, [resultData, autoScroll]);
 
   return (
@@ -116,12 +105,6 @@ const Result = ({ prevPrompt, resultData, loading }) => {
   );
 };
 
-Result.propTypes = {
-  prevPrompt: PropTypes.array.isRequired,
-  resultData: PropTypes.array.isRequired,
-  loading: PropTypes.bool.isRequired,
-};
-
 const Main = () => {
   const {
     onSent,
@@ -133,7 +116,6 @@ const Main = () => {
     setInput,
     stopGeneration,
     isTyping,
-    sidebarPrompt,
   } = useContext(Context);
 
   const handleKeyDown = (e) => {
@@ -145,9 +127,6 @@ const Main = () => {
       onSent();
     }
   };
-
-  console.log("sidebar:", sidebarPrompt);
-  console.log("previous:", prevPrompt);
 
   return (
     <div className="main">

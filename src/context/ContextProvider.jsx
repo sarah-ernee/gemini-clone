@@ -47,7 +47,6 @@ export const ContextProvider = (props) => {
   useEffect(() => {
     if (isNewChat) {
       setSidebarPrompt((prev) => [...prev, input]);
-      console.log("triggered");
     }
   }, [isNewChat, input]);
 
