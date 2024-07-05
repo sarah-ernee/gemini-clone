@@ -1,23 +1,46 @@
-import { createContext, useState, useRef, useEffect } from "react";
+import { createContext, useState, useRef, useEffect, useReducer } from "react";
 import PropTypes from "prop-types";
 
 import run from "../config/gemini";
 export const Context = createContext();
 
+const initialState = {
+  showResult: false,
+  loading: false,
+  isTyping: false,
+  isNewChat: false,
+};
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "SET_SHOW_RESULT":
+      return { ...state, showResult: action.payload };
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+    case "SET_TYPING":
+      return { ...state, isTyping: action.payload };
+    case "SET_NEW_CHAT":
+      return { ...state, isNewChat: action.payload };
+    default:
+      return state;
+  }
+};
+
 const ContextProvider = (props) => {
   const [input, setInput] = useState("");
   const [recentPrompt, setRecentPrompt] = useState("");
+
   const [resultData, setResultData] = useState([]);
-
   const [prevPrompt, setPrevPrompt] = useState([]);
-  const [showResult, setShowResult] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [sidebarPrompt, setSidebarPrompt] = useState([]);
 
-  const [isTyping, setIsTyping] = useState(false);
+  // const [showResult, setShowResult] = useState(false);
+  // const [loading, setLoading] = useState(false);
+  // const [isTyping, setIsTyping] = useState(false);
+  // const [isNewChat, setIsNewChat] = useState(false);
   const isCancelled = useRef(false);
 
-  const [sidebarPrompt, setSidebarPrompt] = useState([]);
-  const [isNewChat, setIsNewChat] = useState(false);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   const typingEffect = (index, nextWord, totalWords, responseIndex) => {
     if (isCancelled.current) {
@@ -25,7 +48,8 @@ const ContextProvider = (props) => {
     }
 
     if (index === 0) {
-      setIsTyping(true);
+      // setIsTyping(true);
+      dispatch({ type: "SET_TYPING", payload: true });
     }
 
     setTimeout(() => {
@@ -40,21 +64,25 @@ const ContextProvider = (props) => {
         });
 
         if (index === totalWords - 1) {
-          setIsTyping(false);
+          // setIsTyping(false);
+          dispatch({ type: "SET_TYPING", payload: false });
         }
       }
     }, 75 * index);
   };
 
   useEffect(() => {
-    if (isNewChat && sidebarPrompt.length === 0) {
+    if (state.isNewChat && sidebarPrompt.length === 0) {
       setSidebarPrompt((prev) => [...prev, input]);
     }
-  }, [isNewChat, input, sidebarPrompt]);
+  }, [state.isNewChat, input, sidebarPrompt]);
 
   const onSent = async (prompt) => {
-    setLoading(true);
-    setShowResult(true);
+    // setLoading(true);
+    // setShowResult(true);
+    dispatch({ type: "SET_LOADING", payload: true });
+    dispatch({ type: "SET_SHOW_RESULT", payload: true });
+
     isCancelled.current = false;
 
     let response;
@@ -66,8 +94,9 @@ const ContextProvider = (props) => {
     // Within same conversation thread
     else {
       if (sidebarPrompt.length === 0) {
-        setIsNewChat(true);
-      } else if (isNewChat) {
+        // setIsNewChat(true);
+        dispatch({ type: "SET_NEW_CHAT", payload: true });
+      } else if (initialState.isNewChat) {
         setPrevPrompt([]);
         setSidebarPrompt((prev) => [...prev, input]);
       }
@@ -99,20 +128,28 @@ const ContextProvider = (props) => {
     }
 
     setInput("");
-    setLoading(false);
-    setIsNewChat(false);
+    // setLoading(false);
+    // setIsNewChat(false);
+    dispatch({ type: "SET_LOADING", payload: false });
+    dispatch({ type: "SET_NEW_CHAT", payload: false });
   };
 
   const newChat = () => {
-    setIsNewChat(true);
-    setLoading(false);
-    setShowResult(false);
+    // setIsNewChat(true);
+    // setLoading(false);
+    // setShowResult(false);
+
+    dispatch({ type: "SET_NEW_CHAT", payload: true });
+    dispatch({ type: "SET_LOADING", payload: false });
+    dispatch({ type: "SET_SHOW_RESULT", payload: false });
   };
 
   const stopGeneration = () => {
     isCancelled.current = true;
-    setLoading(false);
-    setIsTyping(false);
+    // setLoading(false);
+    // setIsTyping(false);
+    dispatch({ type: "SET_LOADING", payload: false });
+    dispatch({ type: "SET_TYPING", payload: false });
   };
 
   const contextValue = {
@@ -122,13 +159,14 @@ const ContextProvider = (props) => {
     setRecentPrompt,
     prevPrompt,
     setPrevPrompt,
-    showResult,
-    setShowResult,
-    loading,
+    // showResult,
+    // setShowResult,
+    // loading,
+    // isTyping,
+    ...state,
     resultData,
     onSent,
     newChat,
-    isTyping,
     stopGeneration,
     sidebarPrompt,
   };

@@ -109,13 +109,14 @@ const Main = () => {
   const {
     onSent,
     prevPrompt,
-    showResult,
-    loading,
     resultData,
     input,
     setInput,
     stopGeneration,
-    isTyping,
+    // showResult,
+    // loading,
+    // isTyping,
+    ...state
   } = useContext(Context);
 
   const handleKeyDown = (e) => {
@@ -135,13 +136,13 @@ const Main = () => {
         <img src={assets.user_icon} />
       </div>
       <div className="main-container">
-        {!showResult ? (
+        {!state.showResult ? (
           <Greet setInput={setInput} />
         ) : (
           <Result
             prevPrompt={prevPrompt}
             resultData={resultData}
-            loading={loading}
+            loading={state.loading}
           />
         )}
         <div className="main-bottom">
@@ -154,7 +155,7 @@ const Main = () => {
               rows={Math.min(5, input.split("\n").length)}
             />
             <div>
-              {loading || isTyping ? (
+              {state.loading || state.isTyping ? (
                 <img src={assets.stop_icon} onClick={() => stopGeneration()} />
               ) : (
                 <img src={assets.send_icon} onClick={() => onSent()} />
