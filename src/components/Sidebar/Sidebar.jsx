@@ -96,7 +96,6 @@ const ConfirmDialog = ({
 const Prompts = ({ setShowResult, sidebarPrompt, setRecentPrompt }) => {
   const loadPrompt = async (prompt) => {
     setRecentPrompt(prompt);
-    // await onSent(prompt);
     setShowResult(true);
   };
 

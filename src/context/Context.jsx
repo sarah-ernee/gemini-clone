@@ -8,7 +8,7 @@ const initialState = {
   showResult: false,
   loading: false,
   isTyping: false,
-  isNewChat: false,
+  input: "",
 };
 
 const reducer = (state, action) => {
@@ -19,95 +19,69 @@ const reducer = (state, action) => {
       return { ...state, loading: action.payload };
     case "SET_TYPING":
       return { ...state, isTyping: action.payload };
-    case "SET_NEW_CHAT":
-      return { ...state, isNewChat: action.payload };
+    case "SET_INPUT":
+      return { ...state, input: action.payload };
     default:
       return state;
   }
 };
 
 const ContextProvider = (props) => {
-  const [input, setInput] = useState("");
-  const [recentPrompt, setRecentPrompt] = useState("");
+  const [state, dispatch] = useReducer(reducer, initialState);
 
+  const [recentPrompt, setRecentPrompt] = useState("");
   const [resultData, setResultData] = useState([]);
   const [prevPrompt, setPrevPrompt] = useState([]);
   const [sidebarPrompt, setSidebarPrompt] = useState([]);
 
-  // const [showResult, setShowResult] = useState(false);
-  // const [loading, setLoading] = useState(false);
-  // const [isTyping, setIsTyping] = useState(false);
-  // const [isNewChat, setIsNewChat] = useState(false);
   const isCancelled = useRef(false);
+  const isNewChat = useRef(false);
 
-  const [state, dispatch] = useReducer(reducer, initialState);
-
-  const typingEffect = (index, nextWord, totalWords, responseIndex) => {
-    if (isCancelled.current) {
-      return;
-    }
-
-    if (index === 0) {
-      // setIsTyping(true);
-      dispatch({ type: "SET_TYPING", payload: true });
-    }
-
-    setTimeout(() => {
-      if (!isCancelled.current) {
-        setResultData((prevData) => {
-          const newData = [...prevData];
-          if (!newData[responseIndex]) {
-            newData[responseIndex] = "";
-          }
-          newData[responseIndex] += nextWord;
-          return newData;
-        });
-
-        if (index === totalWords - 1) {
-          // setIsTyping(false);
-          dispatch({ type: "SET_TYPING", payload: false });
-        }
-      }
-    }, 75 * index);
-  };
-
+  // Watcher given asynchronicity of onSent function
   useEffect(() => {
-    if (state.isNewChat && sidebarPrompt.length === 0) {
-      setSidebarPrompt((prev) => [...prev, input]);
+    if (isNewChat.current && state.input && sidebarPrompt.length === 0) {
+      setSidebarPrompt([state.input]);
     }
-  }, [state.isNewChat, input, sidebarPrompt]);
+  }, [isNewChat, state.input, sidebarPrompt]);
 
+  // Function that handles sidebar, recent and previous prompts
   const onSent = async (prompt) => {
-    // setLoading(true);
-    // setShowResult(true);
     dispatch({ type: "SET_LOADING", payload: true });
     dispatch({ type: "SET_SHOW_RESULT", payload: true });
-
     isCancelled.current = false;
 
     let response;
-    // Clicking on an archived chat
-    if (prompt !== undefined) {
+    // Archived chat where onSent(arg)
+    if (prompt) {
       setRecentPrompt(prompt);
+      response = await run(prompt);
+      await handleResponse(response);
+      return;
     }
 
-    // Within same conversation thread
-    else {
-      if (sidebarPrompt.length === 0) {
-        // setIsNewChat(true);
-        dispatch({ type: "SET_NEW_CHAT", payload: true });
-      } else if (initialState.isNewChat) {
-        setPrevPrompt([]);
-        setSidebarPrompt((prev) => [...prev, input]);
-      }
-
-      prompt = input;
-      setPrevPrompt((prev) => [...prev, input]);
-      setRecentPrompt(input);
+    // Within same conversation thread - first chat
+    if (sidebarPrompt.length === 0) {
+      isNewChat.current = true;
+      setSidebarPrompt([state.input]);
     }
 
-    response = await run(prompt);
+    // Consecutive new chats
+    else if (isNewChat.current && sidebarPrompt.length > 0) {
+      setSidebarPrompt((prev) => [...prev, state.input]);
+    }
 
+    setPrevPrompt((prev) => [...prev, state.input]);
+    setRecentPrompt(state.input);
+    response = await run(state.input);
+    await handleResponse(response);
+
+    dispatch({ type: "SET_INPUT", payload: "" });
+    dispatch({ type: "SET_LOADING", payload: false });
+    isNewChat.current = false;
+  };
+
+  // Function that reformats Gemini response
+  const handleResponse = async (response) => {
     if (!isCancelled.current) {
       let formattedResponse = response
         .replace(/\*\*(.*?)\*\*/g, '<span style="font-weight: 550;">$1</span>')
@@ -125,45 +99,61 @@ const ContextProvider = (props) => {
       }
 
       setResultData((prev) => [...prev, ""]);
+      console.log(resultData);
     }
-
-    setInput("");
-    // setLoading(false);
-    // setIsNewChat(false);
-    dispatch({ type: "SET_LOADING", payload: false });
-    dispatch({ type: "SET_NEW_CHAT", payload: false });
   };
 
-  const newChat = () => {
-    // setIsNewChat(true);
-    // setLoading(false);
-    // setShowResult(false);
+  // Function that handles the typing illusion of Gemini response
+  const typingEffect = (index, nextWord, totalWords, responseIndex) => {
+    if (isCancelled.current) {
+      return;
+    }
 
-    dispatch({ type: "SET_NEW_CHAT", payload: true });
+    if (index === 0) {
+      dispatch({ type: "SET_TYPING", payload: true });
+    }
+
+    setTimeout(() => {
+      if (!isCancelled.current) {
+        setResultData((prevData) => {
+          const newData = [...prevData];
+          if (!newData[responseIndex]) {
+            newData[responseIndex] = "";
+          }
+          newData[responseIndex] += nextWord;
+          return newData;
+        });
+
+        if (index === totalWords - 1) {
+          dispatch({ type: "SET_TYPING", payload: false });
+        }
+      }
+    }, 75 * index);
+  };
+
+  // Function that resets necessary states when New Chat is clicked
+  const newChat = () => {
+    isNewChat.current = true;
+    setPrevPrompt([]);
+    setResultData([]);
     dispatch({ type: "SET_LOADING", payload: false });
     dispatch({ type: "SET_SHOW_RESULT", payload: false });
   };
 
+  // Function that stops generation of Gemini response
   const stopGeneration = () => {
     isCancelled.current = true;
-    // setLoading(false);
-    // setIsTyping(false);
     dispatch({ type: "SET_LOADING", payload: false });
     dispatch({ type: "SET_TYPING", payload: false });
   };
 
   const contextValue = {
-    input,
-    setInput,
+    state,
+    dispatch,
     recentPrompt,
     setRecentPrompt,
     prevPrompt,
     setPrevPrompt,
-    // showResult,
-    // setShowResult,
-    // loading,
-    // isTyping,
-    ...state,
     resultData,
     onSent,
     newChat,

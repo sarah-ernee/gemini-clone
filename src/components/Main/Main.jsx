@@ -3,7 +3,8 @@ import { assets } from "../../assets/assets";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Context } from "../../context/Context";
 
-const Greet = ({ setInput }) => {
+const Greet = () => {
+  const { dispatch } = useContext(Context);
   const cardsData = [
     {
       prompt: "Suggest beautiful places to see on an upcoming trip",
@@ -33,7 +34,9 @@ const Greet = ({ setInput }) => {
           <div
             className="card"
             key={index}
-            onClick={() => setInput(card.prompt)}
+            onClick={() =>
+              dispatch({ type: "SET_INPUT", payload: card.prompt })
+            }
           >
             <p>{card.prompt}</p>
             <img src={card.icon} />
@@ -44,9 +47,10 @@ const Greet = ({ setInput }) => {
   );
 };
 
-const Result = ({ prevPrompt, resultData, loading }) => {
+const Result = ({ prevPrompt, resultData }) => {
   const resultRef = useRef(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  const { state } = useContext(Context);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,7 +58,6 @@ const Result = ({ prevPrompt, resultData, loading }) => {
 
       if (scrollHeight - scrollTop <= clientHeight + 10) {
         setAutoScroll(true);
-        console.log("t");
       } else {
         setAutoScroll(false);
       }
@@ -72,7 +75,6 @@ const Result = ({ prevPrompt, resultData, loading }) => {
     const scrollToBottom = () => {
       if (autoScroll) {
         resultRef.current.scrollTop = resultRef.current.scrollHeight;
-        console.log("w");
       }
     };
 
@@ -89,7 +91,7 @@ const Result = ({ prevPrompt, resultData, loading }) => {
           </div>
           <div className="result-data">
             <img src={assets.gemini_icon} />
-            {index === prevPrompt.length - 1 && loading ? (
+            {index === prevPrompt.length - 1 && state.loading ? (
               <div className="loader">
                 <hr />
                 <hr />
@@ -106,23 +108,13 @@ const Result = ({ prevPrompt, resultData, loading }) => {
 };
 
 const Main = () => {
-  const {
-    onSent,
-    prevPrompt,
-    resultData,
-    input,
-    setInput,
-    stopGeneration,
-    // showResult,
-    // loading,
-    // isTyping,
-    ...state
-  } = useContext(Context);
+  const { state, dispatch, onSent, prevPrompt, resultData, stopGeneration } =
+    useContext(Context);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
-      setInput((prevInput) => prevInput + "\n");
+      dispatch({ type: "SET_INPUT", payload: state.input + +"\n" });
     } else if (e.key === "Enter") {
       e.preventDefault();
       onSent();
@@ -137,7 +129,7 @@ const Main = () => {
       </div>
       <div className="main-container">
         {!state.showResult ? (
-          <Greet setInput={setInput} />
+          <Greet />
         ) : (
           <Result
             prevPrompt={prevPrompt}
@@ -149,10 +141,12 @@ const Main = () => {
           <div className="search-box">
             <textarea
               placeholder="Enter a prompt here"
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) =>
+                dispatch({ type: "SET_INPUT", payload: e.target.value })
+              }
               onKeyDown={handleKeyDown}
-              value={input}
-              rows={Math.min(5, input.split("\n").length)}
+              value={state.input}
+              rows={Math.min(5, state.input.split("\n").length)}
             />
             <div>
               {state.loading || state.isTyping ? (
