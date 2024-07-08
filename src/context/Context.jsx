@@ -15,6 +15,16 @@ const initialState = {
   sidebarPrompt: [],
 };
 
+const functionPayload = (state, action, key) => {
+  return {
+    ...state,
+    [key]:
+      typeof action.payload === "function"
+        ? action.payload(state)
+        : action.payload,
+  };
+};
+
 const reducer = (state, action) => {
   switch (action.type) {
     case "SET_SHOW_RESULT":
@@ -24,39 +34,16 @@ const reducer = (state, action) => {
     case "SET_TYPING":
       return { ...state, isTyping: action.payload };
     case "SET_INPUT":
-      return {
-        ...state,
-        input:
-          typeof action.payload === "function"
-            ? action.payload(state)
-            : action.payload,
-      };
+      return functionPayload(state, action, "input");
     case "SET_RECENT_PROMPT":
       return { ...state, recentPrompt: action.payload };
     case "SET_RESULT":
-      return {
-        ...state,
-        resultData:
-          typeof action.payload === "function"
-            ? action.payload(state)
-            : action.payload,
-      };
+      return functionPayload(state, action, "resultData");
     case "SET_PREV_PROMPT":
-      return {
-        ...state,
-        prevPrompt:
-          typeof action.payload === "function"
-            ? action.payload(state)
-            : action.payload,
-      };
+      return functionPayload(state, action, "prevPrompt");
     case "SET_SIDEBAR_PROMPT":
-      return {
-        ...state,
-        sidebarPrompt:
-          typeof action.payload === "function"
-            ? action.payload(state)
-            : action.payload,
-      };
+      return functionPayload(state, action, "sidebarPrompt");
+
     default:
       return state;
   }
