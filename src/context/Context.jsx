@@ -1,4 +1,4 @@
-import { createContext, useState, useRef, useEffect, useReducer } from "react";
+import { createContext, useRef, useReducer } from "react";
 import PropTypes from "prop-types";
 
 import run from "../config/gemini";
@@ -9,6 +9,10 @@ const initialState = {
   loading: false,
   isTyping: false,
   input: "",
+  recentPrompt: "",
+  resultData: [],
+  prevPrompt: [],
+  sidebarPrompt: [],
 };
 
 const reducer = (state, action) => {
@@ -20,7 +24,39 @@ const reducer = (state, action) => {
     case "SET_TYPING":
       return { ...state, isTyping: action.payload };
     case "SET_INPUT":
-      return { ...state, input: action.payload };
+      return {
+        ...state,
+        input:
+          typeof action.payload === "function"
+            ? action.payload(state)
+            : action.payload,
+      };
+    case "SET_RECENT_PROMPT":
+      return { ...state, recentPrompt: action.payload };
+    case "SET_RESULT":
+      return {
+        ...state,
+        resultData:
+          typeof action.payload === "function"
+            ? action.payload(state)
+            : action.payload,
+      };
+    case "SET_PREV_PROMPT":
+      return {
+        ...state,
+        prevPrompt:
+          typeof action.payload === "function"
+            ? action.payload(state)
+            : action.payload,
+      };
+    case "SET_SIDEBAR_PROMPT":
+      return {
+        ...state,
+        sidebarPrompt:
+          typeof action.payload === "function"
+            ? action.payload(state)
+            : action.payload,
+      };
     default:
       return state;
   }
@@ -28,21 +64,8 @@ const reducer = (state, action) => {
 
 const ContextProvider = (props) => {
   const [state, dispatch] = useReducer(reducer, initialState);
-
-  const [recentPrompt, setRecentPrompt] = useState("");
-  const [resultData, setResultData] = useState([]);
-  const [prevPrompt, setPrevPrompt] = useState([]);
-  const [sidebarPrompt, setSidebarPrompt] = useState([]);
-
   const isCancelled = useRef(false);
   const isNewChat = useRef(false);
-
-  // Watcher given asynchronicity of onSent function
-  useEffect(() => {
-    if (isNewChat.current && state.input && sidebarPrompt.length === 0) {
-      setSidebarPrompt([state.input]);
-    }
-  }, [isNewChat, state.input, sidebarPrompt]);
 
   // Function that handles sidebar, recent and previous prompts
   const onSent = async (prompt) => {
@@ -53,25 +76,31 @@ const ContextProvider = (props) => {
     let response;
     // Archived chat where onSent(arg)
     if (prompt) {
-      setRecentPrompt(prompt);
+      dispatch({ type: "SET_RECENT_PROMPT", payload: prompt });
       response = await run(prompt);
       await handleResponse(response);
       return;
     }
 
     // Within same conversation thread - first chat
-    if (sidebarPrompt.length === 0) {
+    if (state.sidebarPrompt.length === 0) {
       isNewChat.current = true;
-      setSidebarPrompt([state.input]);
+      dispatch({ type: "SET_SIDEBAR_PROMPT", payload: [state.input] });
     }
 
     // Consecutive new chats
-    else if (isNewChat.current && sidebarPrompt.length > 0) {
-      setSidebarPrompt((prev) => [...prev, state.input]);
+    else if (isNewChat.current && state.sidebarPrompt.length > 0) {
+      dispatch({
+        type: "SET_SIDEBAR_PROMPT",
+        payload: (prevState) => [...prevState.sidebarPrompt, state.input],
+      });
     }
 
-    setPrevPrompt((prev) => [...prev, state.input]);
-    setRecentPrompt(state.input);
+    dispatch({
+      type: "SET_PREV_PROMPT",
+      payload: (prevState) => [...prevState.prevPrompt, state.input],
+    });
+    dispatch({ type: "SET_RECENT_PROMPT", payload: state.input });
     response = await run(state.input);
     await handleResponse(response);
 
@@ -82,32 +111,33 @@ const ContextProvider = (props) => {
 
   // Function that reformats Gemini response
   const handleResponse = async (response) => {
-    if (!isCancelled.current) {
-      let formattedResponse = response
-        .replace(/\*\*(.*?)\*\*/g, '<span style="font-weight: 550;">$1</span>')
-        .replace(/##(.*?)\n/g, "<h3>$1</h3>")
-        .replace(/^\*(.*?)$/gm, "<ul><li>$1</li></ul>")
-        .replace(/\n/g, "</br>");
+    if (isCancelled.current) return;
 
-      formattedResponse = formattedResponse.replace(/<\/ul>\n<ul>/g, "");
+    let formattedResponse = response
+      .replace(/\*\*(.*?)\*\*/g, '<span style="font-weight: 550;">$1</span>')
+      .replace(/##(.*?)\n/g, "<h3>$1</h3>")
+      .replace(/^\*(.*?)$/gm, "<ul><li>$1</li></ul>")
+      .replace(/\n/g, "</br>");
 
-      let newResponseArray = formattedResponse.split(" ");
-      const responseIndex = resultData.length;
-      for (let i = 0; i < newResponseArray.length; i++) {
-        const nextWord = newResponseArray[i];
-        typingEffect(i, nextWord + " ", newResponseArray.length, responseIndex);
-      }
+    formattedResponse = formattedResponse.replace(/<\/ul>\n<ul>/g, "");
 
-      setResultData((prev) => [...prev, ""]);
-      console.log(resultData);
+    let newResponseArray = formattedResponse.split(" ");
+    const responseIndex = state.resultData.length;
+    for (let i = 0; i < newResponseArray.length; i++) {
+      if (isCancelled.current) return;
+      const nextWord = newResponseArray[i];
+      typingEffect(i, nextWord + " ", newResponseArray.length, responseIndex);
     }
+
+    dispatch({
+      type: "SET_RESULT",
+      payload: (prevState) => [...prevState.resultData, ""],
+    });
   };
 
   // Function that handles the typing illusion of Gemini response
   const typingEffect = (index, nextWord, totalWords, responseIndex) => {
-    if (isCancelled.current) {
-      return;
-    }
+    if (isCancelled.current) return;
 
     if (index === 0) {
       dispatch({ type: "SET_TYPING", payload: true });
@@ -115,13 +145,16 @@ const ContextProvider = (props) => {
 
     setTimeout(() => {
       if (!isCancelled.current) {
-        setResultData((prevData) => {
-          const newData = [...prevData];
-          if (!newData[responseIndex]) {
-            newData[responseIndex] = "";
-          }
-          newData[responseIndex] += nextWord;
-          return newData;
+        dispatch({
+          type: "SET_RESULT",
+          payload: (prevState) => {
+            const newData = [...prevState.resultData];
+            if (!newData[responseIndex]) {
+              newData[responseIndex] = "";
+            }
+            newData[responseIndex] += nextWord;
+            return newData;
+          },
         });
 
         if (index === totalWords - 1) {
@@ -134,8 +167,8 @@ const ContextProvider = (props) => {
   // Function that resets necessary states when New Chat is clicked
   const newChat = () => {
     isNewChat.current = true;
-    setPrevPrompt([]);
-    setResultData([]);
+    dispatch({ type: "SET_PREV_PROMPT", payload: [] });
+    dispatch({ type: "SET_RESULT", payload: [] });
     dispatch({ type: "SET_LOADING", payload: false });
     dispatch({ type: "SET_SHOW_RESULT", payload: false });
   };
@@ -150,15 +183,9 @@ const ContextProvider = (props) => {
   const contextValue = {
     state,
     dispatch,
-    recentPrompt,
-    setRecentPrompt,
-    prevPrompt,
-    setPrevPrompt,
-    resultData,
     onSent,
     newChat,
     stopGeneration,
-    sidebarPrompt,
   };
 
   return (

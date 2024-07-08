@@ -48,12 +48,8 @@ const HelpDialog = ({ show, handleClose, setShowConfirm }) => {
   );
 };
 
-const ConfirmDialog = ({
-  showConfirm,
-  setShowConfirm,
-  setShowHelp,
-  setPrevPrompt,
-}) => {
+const ConfirmDialog = ({ showConfirm, setShowConfirm, setShowHelp }) => {
+  const { dispatch } = useContext(Context);
   if (!showConfirm) return null;
 
   return (
@@ -82,7 +78,7 @@ const ConfirmDialog = ({
             onClick={() => {
               setShowConfirm(false);
               setShowHelp(false);
-              setPrevPrompt([]);
+              dispatch({ type: "SET_PREV_PROMPT", payload: [] });
             }}
           >
             Confirm
@@ -93,16 +89,18 @@ const ConfirmDialog = ({
   );
 };
 
-const Prompts = ({ setShowResult, sidebarPrompt, setRecentPrompt }) => {
+const Prompts = ({ setShowResult }) => {
+  const { state, dispatch } = useContext(Context);
+
   const loadPrompt = async (prompt) => {
-    setRecentPrompt(prompt);
+    dispatch({ type: "SET_RECENT_PROMPT", payload: prompt });
     setShowResult(true);
   };
 
   return (
     <div className="recent">
       <p className="recent-title">Recent</p>
-      {sidebarPrompt.map((item, index) => {
+      {state.sidebarPrompt.map((item, index) => {
         return (
           <div
             onClick={() => loadPrompt(item)}
@@ -123,8 +121,7 @@ const Sidebar = () => {
   const [showHelp, setShowHelp] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const { newChat, sidebarPrompt, setRecentPrompt, setPrevPrompt } =
-    useContext(Context);
+  const { newChat } = useContext(Context);
 
   return (
     <div className="sidebar">
@@ -144,13 +141,7 @@ const Sidebar = () => {
           <img src={assets.plus_icon} />
           {extended ? <p>New Chat</p> : null}
         </div>
-        {extended ? (
-          <Prompts
-            setShowResult={true}
-            sidebarPrompt={sidebarPrompt}
-            setRecentPrompt={setRecentPrompt}
-          />
-        ) : null}
+        {extended ? <Prompts setShowResult={true} /> : null}
       </div>
 
       <div className="bottom">
@@ -176,7 +167,6 @@ const Sidebar = () => {
         showConfirm={showConfirm}
         setShowConfirm={setShowConfirm}
         setShowHelp={setShowHelp}
-        setPrevPrompt={setPrevPrompt}
       />
     </div>
   );

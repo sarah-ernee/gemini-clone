@@ -47,11 +47,12 @@ const Greet = () => {
   );
 };
 
-const Result = ({ prevPrompt, resultData }) => {
+const Result = () => {
   const resultRef = useRef(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const { state } = useContext(Context);
 
+  // Setup event listener for `autoscroll` state
   useEffect(() => {
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = resultRef.current;
@@ -71,6 +72,7 @@ const Result = ({ prevPrompt, resultData }) => {
     };
   }, []);
 
+  // Scroll behavior depending on `autoscroll`
   useEffect(() => {
     const scrollToBottom = () => {
       if (autoScroll) {
@@ -79,11 +81,11 @@ const Result = ({ prevPrompt, resultData }) => {
     };
 
     scrollToBottom();
-  }, [resultData, autoScroll]);
+  }, [state.resultData, autoScroll]);
 
   return (
     <div className="result" ref={resultRef}>
-      {prevPrompt.map((prompt, index) => (
+      {state.prevPrompt.map((prompt, index) => (
         <div key={index} className="result-entry">
           <div className="result-title">
             <img src={assets.user_icon} />
@@ -91,14 +93,16 @@ const Result = ({ prevPrompt, resultData }) => {
           </div>
           <div className="result-data">
             <img src={assets.gemini_icon} />
-            {index === prevPrompt.length - 1 && state.loading ? (
+            {index === state.prevPrompt.length - 1 && state.loading ? (
               <div className="loader">
                 <hr />
                 <hr />
                 <hr />
               </div>
             ) : (
-              <p dangerouslySetInnerHTML={{ __html: resultData[index] }}></p>
+              <p
+                dangerouslySetInnerHTML={{ __html: state.resultData[index] }}
+              ></p>
             )}
           </div>
         </div>
@@ -108,14 +112,20 @@ const Result = ({ prevPrompt, resultData }) => {
 };
 
 const Main = () => {
-  const { state, dispatch, onSent, prevPrompt, resultData, stopGeneration } =
-    useContext(Context);
+  const { state, dispatch, onSent, stopGeneration } = useContext(Context);
 
   const handleKeyDown = (e) => {
+    // Allow newline addition inside input box
     if (e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
-      dispatch({ type: "SET_INPUT", payload: state.input + +"\n" });
-    } else if (e.key === "Enter") {
+      dispatch({
+        type: "SET_INPUT",
+        payload: (prevState) => prevState.input + "\n",
+      });
+    }
+
+    // Send message if ENTER is hit
+    else if (e.key === "Enter") {
       e.preventDefault();
       onSent();
     }
@@ -128,15 +138,7 @@ const Main = () => {
         <img src={assets.user_icon} />
       </div>
       <div className="main-container">
-        {!state.showResult ? (
-          <Greet />
-        ) : (
-          <Result
-            prevPrompt={prevPrompt}
-            resultData={resultData}
-            loading={state.loading}
-          />
-        )}
+        {!state.showResult ? <Greet /> : <Result />}
         <div className="main-bottom">
           <div className="search-box">
             <textarea
