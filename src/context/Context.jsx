@@ -1,4 +1,4 @@
-import { createContext, useRef, useReducer } from "react";
+import { createContext, useRef, useReducer, useEffect } from "react";
 import PropTypes from "prop-types";
 
 import run from "../config/gemini";
@@ -13,6 +13,7 @@ const initialState = {
   resultData: [],
   prevPrompt: [],
   sidebarPrompt: [],
+  pauses: {},
 };
 
 const functionPayload = (state, action, key) => {
@@ -43,7 +44,16 @@ const reducer = (state, action) => {
       return functionPayload(state, action, "prevPrompt");
     case "SET_SIDEBAR_PROMPT":
       return functionPayload(state, action, "sidebarPrompt");
-
+    case "SET_CANCELLATION_STATE":
+      return {
+        ...state,
+        pauses: {
+          ...state.pauses,
+          [action.payload.id]: action.payload.isCancelled,
+        },
+      };
+    case "CLEAR_CANCELLATION_STATES":
+      return { ...state, pauses: {} };
     default:
       return state;
   }
@@ -51,32 +61,50 @@ const reducer = (state, action) => {
 
 const ContextProvider = (props) => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const isCancelled = useRef(false);
   const isNewChat = useRef(false);
+  const currPauseId = useRef(null);
+  const pauseSnapshot = useRef(state.pauses);
 
-  // Function that handles sidebar, recent and previous prompts
+  // Asynchronous nature may not have the updated val of dispatched state
+  // Hence why we utilize useEffect to update a variable based on the state change
+  useEffect(() => {
+    pauseSnapshot.current = state.pauses;
+    console.log("Updated cancellation states: ", state.pauses);
+  }, [state.pauses]);
+
   const onSent = async (prompt) => {
     dispatch({ type: "SET_LOADING", payload: true });
     dispatch({ type: "SET_SHOW_RESULT", payload: true });
-    isCancelled.current = false;
+
+    // Cancel all previous responses
+    Object.keys(pauseSnapshot.current).forEach((id) => {
+      dispatch({
+        type: "SET_CANCELLATION_STATE",
+        payload: { id, isCancelled: true },
+      });
+    });
+
+    // Register new pauseId that defaults as false at first
+    const pauseId =
+      Date.now().toString(36) + Math.random().toString(36).substr(2);
+    currPauseId.current = pauseId;
+    dispatch({
+      type: "SET_CANCELLATION_STATE",
+      payload: { id: pauseId, isCancelled: false },
+    });
 
     let response;
-    // Archived chat where onSent(arg)
     if (prompt) {
       dispatch({ type: "SET_RECENT_PROMPT", payload: prompt });
       response = await run(prompt);
-      await handleResponse(response);
+      await handleResponse(response, pauseId);
       return;
     }
 
-    // Within same conversation thread - first chat
     if (state.sidebarPrompt.length === 0) {
       isNewChat.current = true;
       dispatch({ type: "SET_SIDEBAR_PROMPT", payload: [state.input] });
-    }
-
-    // Consecutive new chats
-    else if (isNewChat.current && state.sidebarPrompt.length > 0) {
+    } else if (isNewChat.current && state.sidebarPrompt.length > 0) {
       dispatch({
         type: "SET_SIDEBAR_PROMPT",
         payload: (prevState) => [...prevState.sidebarPrompt, state.input],
@@ -89,16 +117,16 @@ const ContextProvider = (props) => {
     });
     dispatch({ type: "SET_RECENT_PROMPT", payload: state.input });
     response = await run(state.input);
-    await handleResponse(response);
+    await handleResponse(response, pauseId);
 
     dispatch({ type: "SET_INPUT", payload: "" });
     dispatch({ type: "SET_LOADING", payload: false });
     isNewChat.current = false;
   };
 
-  // Function that reformats Gemini response
-  const handleResponse = async (response) => {
-    if (isCancelled.current) return;
+  const handleResponse = async (response, pauseId) => {
+    console.log("handled: ", pauseSnapshot.current[pauseId]);
+    if (pauseSnapshot.current[pauseId]) return;
 
     let formattedResponse = response
       .replace(/\*\*(.*?)\*\*/g, '<span style="font-weight: 550;">$1</span>')
@@ -111,9 +139,14 @@ const ContextProvider = (props) => {
     let newResponseArray = formattedResponse.split(" ");
     const responseIndex = state.resultData.length;
     for (let i = 0; i < newResponseArray.length; i++) {
-      if (isCancelled.current) return;
       const nextWord = newResponseArray[i];
-      typingEffect(i, nextWord + " ", newResponseArray.length, responseIndex);
+      typingEffect(
+        i,
+        nextWord + " ",
+        newResponseArray.length,
+        responseIndex,
+        pauseId
+      );
     }
 
     dispatch({
@@ -122,16 +155,21 @@ const ContextProvider = (props) => {
     });
   };
 
-  // Function that handles the typing illusion of Gemini response
-  const typingEffect = (index, nextWord, totalWords, responseIndex) => {
-    if (isCancelled.current) return;
+  const typingEffect = (
+    index,
+    nextWord,
+    totalWords,
+    responseIndex,
+    pauseId
+  ) => {
+    console.log("typing: ", pauseSnapshot.current[pauseId]);
 
     if (index === 0) {
       dispatch({ type: "SET_TYPING", payload: true });
     }
 
     setTimeout(() => {
-      if (!isCancelled.current) {
+      if (!pauseSnapshot.current[pauseId]) {
         dispatch({
           type: "SET_RESULT",
           payload: (prevState) => {
@@ -146,23 +184,33 @@ const ContextProvider = (props) => {
 
         if (index === totalWords - 1) {
           dispatch({ type: "SET_TYPING", payload: false });
+
+          // Clean up the cancellation state for this response
+          dispatch({
+            type: "SET_CANCELLATION_STATE",
+            payload: { id: pauseId, isCancelled: true },
+          });
         }
       }
     }, 75 * index);
   };
 
-  // Function that resets necessary states when New Chat is clicked
   const newChat = () => {
     isNewChat.current = true;
     dispatch({ type: "SET_PREV_PROMPT", payload: [] });
     dispatch({ type: "SET_RESULT", payload: [] });
     dispatch({ type: "SET_LOADING", payload: false });
     dispatch({ type: "SET_SHOW_RESULT", payload: false });
+    dispatch({ type: "CLEAR_CANCELLATION_STATES" });
   };
 
-  // Function that stops generation of Gemini response
   const stopGeneration = () => {
-    isCancelled.current = true;
+    if (currPauseId.current) {
+      dispatch({
+        type: "SET_CANCELLATION_STATE",
+        payload: { id: currPauseId.current, isCancelled: true },
+      });
+    }
     dispatch({ type: "SET_LOADING", payload: false });
     dispatch({ type: "SET_TYPING", payload: false });
   };
