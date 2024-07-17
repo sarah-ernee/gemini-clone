@@ -69,7 +69,6 @@ const ContextProvider = (props) => {
   // Hence why we utilize useEffect to update a variable based on the state change
   useEffect(() => {
     pauseSnapshot.current = state.pauses;
-    console.log("Updated cancellation states: ", state.pauses);
   }, [state.pauses]);
 
   const onSent = async (prompt) => {
@@ -125,7 +124,6 @@ const ContextProvider = (props) => {
   };
 
   const handleResponse = async (response, pauseId) => {
-    console.log("handled: ", pauseSnapshot.current[pauseId]);
     if (pauseSnapshot.current[pauseId]) return;
 
     let formattedResponse = response
@@ -137,14 +135,13 @@ const ContextProvider = (props) => {
     formattedResponse = formattedResponse.replace(/<\/ul>\n<ul>/g, "");
 
     let newResponseArray = formattedResponse.split(" ");
-    const responseIndex = state.resultData.length;
     for (let i = 0; i < newResponseArray.length; i++) {
       const nextWord = newResponseArray[i];
       typingEffect(
         i,
         nextWord + " ",
         newResponseArray.length,
-        responseIndex,
+        state.resultData.length,
         pauseId
       );
     }
@@ -156,15 +153,13 @@ const ContextProvider = (props) => {
   };
 
   const typingEffect = (
-    index,
+    wordIndex,
     nextWord,
     totalWords,
     responseIndex,
     pauseId
   ) => {
-    console.log("typing: ", pauseSnapshot.current[pauseId]);
-
-    if (index === 0) {
+    if (wordIndex === 0) {
       dispatch({ type: "SET_TYPING", payload: true });
     }
 
@@ -174,15 +169,12 @@ const ContextProvider = (props) => {
           type: "SET_RESULT",
           payload: (prevState) => {
             const newData = [...prevState.resultData];
-            if (!newData[responseIndex]) {
-              newData[responseIndex] = "";
-            }
             newData[responseIndex] += nextWord;
             return newData;
           },
         });
 
-        if (index === totalWords - 1) {
+        if (wordIndex === totalWords - 1) {
           dispatch({ type: "SET_TYPING", payload: false });
 
           // Clean up the cancellation state for this response
@@ -192,7 +184,7 @@ const ContextProvider = (props) => {
           });
         }
       }
-    }, 75 * index);
+    }, 75 * wordIndex);
   };
 
   const newChat = () => {
