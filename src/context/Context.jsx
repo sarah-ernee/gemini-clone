@@ -1,7 +1,7 @@
-import { createContext, useRef, useReducer, useEffect } from "react";
-import PropTypes from "prop-types";
-
+import "./Context.css";
 import run from "../config/gemini";
+import { createContext, useRef, useReducer, useEffect } from "react";
+
 export const Context = createContext();
 
 const initialState = {
@@ -130,6 +130,15 @@ const ContextProvider = (props) => {
       .replace(/\*\*(.*?)\*\*/g, '<span style="font-weight: 550;">$1</span>')
       .replace(/##(.*?)\n/g, "<h3>$1</h3>")
       .replace(/^\*(.*?)$/gm, "<ul><li>$1</li></ul>")
+      .replace(
+        /```(\w+)\n([\s\S]*?)```/g,
+        '<pre class="code-block"><div class="code-header"><span class="code-lang">$1</span></div><code>$2</code></pre>'
+      )
+      .replace(
+        /```\n([\s\S]*?)```/g,
+        '<pre class="code-block"><code>$1</code></pre>'
+      )
+      .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
       .replace(/\n/g, "</br>");
 
     formattedResponse = formattedResponse.replace(/<\/ul>\n<ul>/g, "");
@@ -218,10 +227,6 @@ const ContextProvider = (props) => {
   return (
     <Context.Provider value={contextValue}>{props.children}</Context.Provider>
   );
-};
-
-ContextProvider.propTypes = {
-  children: PropTypes.node.isRequired,
 };
 
 export default ContextProvider;
