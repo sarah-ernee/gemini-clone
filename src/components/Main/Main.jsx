@@ -89,7 +89,11 @@ const Result = () => {
         <div key={index} className="result-entry">
           <div className="result-title">
             <img src={assets.user_icon} />
-            <p>{prompt}</p>
+            <p
+              dangerouslySetInnerHTML={{
+                __html: prompt.replace(/\n/g, "<br>"),
+              }}
+            ></p>
           </div>
           <div className="result-data">
             <img src={assets.gemini_icon} />
