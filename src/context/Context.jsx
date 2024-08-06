@@ -65,6 +65,8 @@ const ContextProvider = (props) => {
   const currPauseId = useRef(null);
   const pauseSnapshot = useRef(state.pauses);
 
+  const activeResponseRef = useRef(null);
+
   // Asynchronous nature may not have the updated val of dispatched state
   // Hence why we utilize useEffect to update a variable based on the state change
   useEffect(() => {
@@ -72,34 +74,58 @@ const ContextProvider = (props) => {
   }, [state.pauses]);
 
   const onSent = async (prompt) => {
+    resetStates();
+
+    const pauseId = generatePauseId();
+    currPauseId.current = pauseId;
+
+    dispatch({
+      type: "SET_CANCELLATION_STATE",
+      payload: { id: pauseId, isCancelled: false },
+    });
+
+    // Immediately add the prompt to the current conversation
+    // dispatch({
+    //   type: "SET_PREV_PROMPT",
+    //   payload: (prevState) => [...prevState.prevPrompt, prompt || state.input],
+    // });
+
+    if (prompt) {
+      await handlePrompt(prompt, pauseId);
+    } else {
+      await handleInput(pauseId);
+    }
+
+    dispatch({ type: "SET_INPUT", payload: "" });
+    dispatch({ type: "SET_LOADING", payload: false });
+    isNewChat.current = false;
+  };
+
+  const resetStates = () => {
+    activeResponseRef.current = null;
+
+    dispatch({ type: "SET_RESULT", payload: [] });
     dispatch({ type: "SET_LOADING", payload: true });
     dispatch({ type: "SET_SHOW_RESULT", payload: true });
-
-    // Cancel all previous responses
     Object.keys(pauseSnapshot.current).forEach((id) => {
       dispatch({
         type: "SET_CANCELLATION_STATE",
         payload: { id, isCancelled: true },
       });
     });
+  };
 
-    // Register new pauseId that defaults as false at first
-    const pauseId =
-      Date.now().toString(36) + Math.random().toString(36).substr(2);
-    currPauseId.current = pauseId;
-    dispatch({
-      type: "SET_CANCELLATION_STATE",
-      payload: { id: pauseId, isCancelled: false },
-    });
+  const generatePauseId = () => {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  };
 
-    let response;
-    if (prompt) {
-      dispatch({ type: "SET_RECENT_PROMPT", payload: prompt });
-      response = await run(prompt);
-      await handleResponse(response, pauseId);
-      return;
-    }
+  const handlePrompt = async (prompt, pauseId) => {
+    dispatch({ type: "SET_RECENT_PROMPT", payload: prompt });
+    const response = await run(prompt);
+    await handleResponse(response, pauseId);
+  };
 
+  const handleInput = async (pauseId) => {
     if (state.sidebarPrompt.length === 0) {
       isNewChat.current = true;
       dispatch({ type: "SET_SIDEBAR_PROMPT", payload: [state.input] });
@@ -115,16 +141,14 @@ const ContextProvider = (props) => {
       payload: (prevState) => [...prevState.prevPrompt, state.input],
     });
     dispatch({ type: "SET_RECENT_PROMPT", payload: state.input });
-    response = await run(state.input);
-    await handleResponse(response, pauseId);
 
-    dispatch({ type: "SET_INPUT", payload: "" });
-    dispatch({ type: "SET_LOADING", payload: false });
-    isNewChat.current = false;
+    const response = await run(state.input);
+    await handleResponse(response, pauseId);
   };
 
   const handleResponse = async (response, pauseId) => {
     if (pauseSnapshot.current[pauseId]) return;
+    activeResponseRef.current = response;
 
     const escapeHtml = (unsafe) => {
       return unsafe
@@ -189,7 +213,7 @@ const ContextProvider = (props) => {
     }
 
     setTimeout(() => {
-      if (!pauseSnapshot.current[pauseId]) {
+      if (!pauseSnapshot.current[pauseId] && activeResponseRef.current) {
         dispatch({
           type: "SET_RESULT",
           payload: (prevState) => {
@@ -214,6 +238,8 @@ const ContextProvider = (props) => {
 
   const newChat = () => {
     isNewChat.current = true;
+    activeResponseRef.current = null;
+
     dispatch({ type: "SET_PREV_PROMPT", payload: [] });
     dispatch({ type: "SET_RESULT", payload: [] });
     dispatch({ type: "SET_LOADING", payload: false });

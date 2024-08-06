@@ -116,7 +116,8 @@ const Result = () => {
 };
 
 const Main = () => {
-  const { state, dispatch, onSent, stopGeneration } = useContext(Context);
+  const { state, dispatch, onSent, newChat, stopGeneration } =
+    useContext(Context);
 
   const handleKeyDown = (e) => {
     // Allow newline addition inside input box
@@ -131,6 +132,7 @@ const Main = () => {
     // Send message if ENTER is hit
     else if (e.key === "Enter") {
       e.preventDefault();
+      newChat();
       onSent();
     }
   };

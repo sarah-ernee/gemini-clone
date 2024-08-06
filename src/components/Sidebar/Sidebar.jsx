@@ -89,12 +89,12 @@ const ConfirmDialog = ({ showConfirm, setShowConfirm, setShowHelp }) => {
   );
 };
 
-const Prompts = ({ setShowResult }) => {
+const Prompts = () => {
   const { state, dispatch } = useContext(Context);
 
   const loadPrompt = async (prompt) => {
     dispatch({ type: "SET_RECENT_PROMPT", payload: prompt });
-    setShowResult(true);
+    dispatch({ type: "SET_SHOW_RESULT", payload: true });
   };
 
   return (
