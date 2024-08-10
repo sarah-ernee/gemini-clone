@@ -87,16 +87,7 @@ const ContextProvider = (props) => {
     }
 
     await handleResponse(response);
-
-    dispatch({ type: "SET_INPUT", payload: "" });
-    dispatch({ type: "SET_LOADING", payload: false });
-    dispatch({ type: "CREATE_NEW_CHAT", payload: false });
-  };
-
-  const resetStates = () => {
-    dispatch({ type: "SET_RESULT", payload: [] });
-    dispatch({ type: "SET_LOADING", payload: true });
-    dispatch({ type: "SET_SHOW_RESULT", payload: true });
+    clearStates();
   };
 
   const handleResponse = async (response) => {
@@ -129,17 +120,16 @@ const ContextProvider = (props) => {
 
   const typingEffect = (wordIndex, nextWord, totalWords, responseIndex) => {
     const timeout = setTimeout(() => {
-      // if (!nextWord) return;
-      if (nextWord) {
-        dispatch({
-          type: "SET_RESULT",
-          payload: (prevState) => {
-            const newData = [...prevState.resultData];
-            newData[responseIndex] += nextWord;
-            return newData;
-          },
-        });
-      }
+      if (!nextWord) return;
+
+      dispatch({
+        type: "SET_RESULT",
+        payload: (prevState) => {
+          const newData = [...prevState.resultData];
+          newData[responseIndex] += nextWord;
+          return newData;
+        },
+      });
 
       if (wordIndex === totalWords - 1) {
         dispatch({ type: "SET_TYPING", payload: false });
@@ -165,6 +155,18 @@ const ContextProvider = (props) => {
 
     dispatch({ type: "SET_LOADING", payload: false });
     dispatch({ type: "SET_TYPING", payload: false });
+  };
+
+  const resetStates = () => {
+    dispatch({ type: "SET_RESULT", payload: [] });
+    dispatch({ type: "SET_LOADING", payload: true });
+    dispatch({ type: "SET_SHOW_RESULT", payload: true });
+  };
+
+  const clearStates = () => {
+    dispatch({ type: "SET_INPUT", payload: "" });
+    dispatch({ type: "SET_LOADING", payload: false });
+    dispatch({ type: "CREATE_NEW_CHAT", payload: false });
   };
 
   const contextValue = {
