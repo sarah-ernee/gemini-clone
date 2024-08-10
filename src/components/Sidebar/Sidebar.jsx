@@ -90,11 +90,10 @@ const ConfirmDialog = ({ showConfirm, setShowConfirm, setShowHelp }) => {
 };
 
 const Prompts = () => {
-  const { state, dispatch } = useContext(Context);
+  const { state, onSent } = useContext(Context);
 
   const loadPrompt = async (prompt) => {
-    dispatch({ type: "SET_RECENT_PROMPT", payload: prompt });
-    dispatch({ type: "SET_SHOW_RESULT", payload: true });
+    onSent(prompt, false);
   };
 
   return (
@@ -103,7 +102,9 @@ const Prompts = () => {
       {state.sidebarPrompt.map((item, index) => {
         return (
           <div
-            onClick={() => loadPrompt(item)}
+            onClick={() => {
+              loadPrompt(item);
+            }}
             className="recent-entry"
             key={index}
           >

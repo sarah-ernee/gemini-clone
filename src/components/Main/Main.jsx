@@ -97,17 +97,7 @@ const Result = () => {
           </div>
           <div className="result-data">
             <img src={assets.gemini_icon} />
-            {index === state.prevPrompt.length - 1 && state.loading ? (
-              <div className="loader">
-                <hr />
-                <hr />
-                <hr />
-              </div>
-            ) : (
-              <p
-                dangerouslySetInnerHTML={{ __html: state.resultData[index] }}
-              ></p>
-            )}
+            <p dangerouslySetInnerHTML={{ __html: state.resultData }}></p>
           </div>
         </div>
       ))}
@@ -116,9 +106,7 @@ const Result = () => {
 };
 
 const Main = () => {
-  const { state, dispatch, onSent, newChat, stopGeneration } =
-    useContext(Context);
-
+  const { state, dispatch, onSent, stopGeneration } = useContext(Context);
   const handleKeyDown = (e) => {
     // Allow newline addition inside input box
     if (e.key === "Enter" && e.shiftKey) {
@@ -132,8 +120,8 @@ const Main = () => {
     // Send message if ENTER is hit
     else if (e.key === "Enter") {
       e.preventDefault();
-      newChat();
-      onSent();
+      // dispatch({ type: "CREATE_NEW_CHAT", payload: true });
+      onSent(undefined, true);
     }
   };
 
@@ -160,7 +148,13 @@ const Main = () => {
               {state.loading || state.isTyping ? (
                 <img src={assets.stop_icon} onClick={() => stopGeneration()} />
               ) : (
-                <img src={assets.send_icon} onClick={() => onSent()} />
+                <img
+                  src={assets.send_icon}
+                  onClick={() => {
+                    // dispatch({ type: "CREATE_NEW_CHAT", payload: true });
+                    onSent(undefined, true);
+                  }}
+                />
               )}
             </div>
           </div>
