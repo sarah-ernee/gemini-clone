@@ -5,9 +5,6 @@
   justify-content: space-between;
   background: #f0f4f9;
   padding: 25px 15px;
-
-  overflow-y: auto;
-  scrollbar-width: thin;
 }
 
 .sidebar img {
@@ -195,4 +192,27 @@
 .sidebar .settings option {
   padding: 20px;
   margin: 20px 20px;
+}
+
+/* Make sure the container of the recent prompts is scrollable */
+.sidebar .recent {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 70vh;
+  padding-right: 15px;
+}
+
+/* Optional: style scrollbar to fit your design */
+.sidebar .recent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar .recent::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.sidebar .recent::-webkit-scrollbar-track {
+  background-color: transparent;
 }

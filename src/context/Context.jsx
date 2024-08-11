@@ -54,14 +54,15 @@ const reducer = (state, action) => {
 const ContextProvider = (props) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  // Read local storage after component mounts
   useEffect(() => {
     const storedSidebarPrompts =
       JSON.parse(localStorage.getItem("sidebarPrompts")) || [];
     dispatch({ type: "SET_SIDEBAR_PROMPT", payload: storedSidebarPrompts });
   }, []);
 
+  // Write to local storage when sidebarPrompt state updates
   useEffect(() => {
-    // Save sidebar prompts to local storage whenever they change
     localStorage.setItem("sidebarPrompts", JSON.stringify(state.sidebarPrompt));
   }, [state.sidebarPrompt]);
 
@@ -80,8 +81,12 @@ const ContextProvider = (props) => {
 
     let response;
     if (prompt !== undefined) {
-      response = await run(prompt);
+      dispatch({
+        type: "SET_PREV_PROMPT",
+        payload: [prompt],
+      });
       dispatch({ type: "SET_RECENT_PROMPT", payload: prompt });
+      response = await run(prompt);
     } else {
       dispatch({
         type: "SET_PREV_PROMPT",

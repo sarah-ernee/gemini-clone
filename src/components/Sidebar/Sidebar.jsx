@@ -1,6 +1,6 @@
 import "./Sidebar.css";
 import { assets } from "../../assets/assets";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 
 import { Context } from "../../context/Context";
 
@@ -49,8 +49,25 @@ const HelpDialog = ({ show, handleClose, setShowConfirm }) => {
 };
 
 const ConfirmDialog = ({ showConfirm, setShowConfirm, setShowHelp }) => {
-  const { dispatch } = useContext(Context);
+  const { state, dispatch } = useContext(Context);
+
+  useEffect(() => {
+    console.log("showResult changed to:", state.showResult);
+  }, [state.showResult]);
   if (!showConfirm) return null;
+
+  const clearArchive = () => {
+    localStorage.removeItem("sidebarPrompts");
+
+    // Clear states
+    dispatch({ type: "SET_PREV_PROMPT", payload: [] });
+    dispatch({ type: "SET_SIDEBAR_PROMPT", payload: [] });
+    dispatch({ type: "SHOW_RESULT", payload: false });
+
+    // Close all dialogs
+    setShowConfirm(false);
+    setShowHelp(false);
+  };
 
   return (
     <div className="dialog-overlay">
@@ -73,14 +90,7 @@ const ConfirmDialog = ({ showConfirm, setShowConfirm, setShowHelp }) => {
           >
             Cancel
           </button>
-          <button
-            className="settings-button"
-            onClick={() => {
-              setShowConfirm(false);
-              setShowHelp(false);
-              dispatch({ type: "SET_PREV_PROMPT", payload: [] });
-            }}
-          >
+          <button className="settings-button" onClick={clearArchive}>
             Confirm
           </button>
         </div>
@@ -92,7 +102,7 @@ const ConfirmDialog = ({ showConfirm, setShowConfirm, setShowHelp }) => {
 const Prompts = () => {
   const { state, onSent } = useContext(Context);
 
-  const loadPrompt = async (prompt) => {
+  const loadPrompt = (prompt) => {
     onSent(prompt, false);
   };
 
@@ -102,9 +112,7 @@ const Prompts = () => {
       {state.sidebarPrompt.map((item, index) => {
         return (
           <div
-            onClick={() => {
-              loadPrompt(item);
-            }}
+            onClick={() => loadPrompt(item)}
             className="recent-entry"
             key={index}
           >

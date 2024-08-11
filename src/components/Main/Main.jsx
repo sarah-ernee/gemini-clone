@@ -82,7 +82,7 @@ const Result = () => {
 
     scrollToBottom();
   }, [state.resultData, autoScroll]);
-  
+
   return (
     <div className="result" ref={resultRef}>
       {state.prevPrompt.map((prompt, index) => (
@@ -128,7 +128,6 @@ const Main = () => {
     // Send message if ENTER is hit
     else if (e.key === "Enter") {
       e.preventDefault();
-      // dispatch({ type: "CREATE_NEW_CHAT", payload: true });
       onSent(undefined, true);
     }
   };
