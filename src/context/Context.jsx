@@ -1,6 +1,6 @@
 import "./Context.css";
 import run from "../config/gemini";
-import { createContext, useRef, useReducer } from "react";
+import { createContext, useRef, useReducer, useEffect } from "react";
 import { formatResponse } from "../utils/formatting";
 
 export const Context = createContext();
@@ -53,6 +53,17 @@ const reducer = (state, action) => {
 
 const ContextProvider = (props) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  useEffect(() => {
+    const storedSidebarPrompts =
+      JSON.parse(localStorage.getItem("sidebarPrompts")) || [];
+    dispatch({ type: "SET_SIDEBAR_PROMPT", payload: storedSidebarPrompts });
+  }, []);
+
+  useEffect(() => {
+    // Save sidebar prompts to local storage whenever they change
+    localStorage.setItem("sidebarPrompts", JSON.stringify(state.sidebarPrompt));
+  }, [state.sidebarPrompt]);
 
   const timeouts = useRef([]);
 
