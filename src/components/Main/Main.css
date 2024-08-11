@@ -31,13 +31,40 @@
   padding: 20px;
 }
 
+/* Hello Dev gradient */
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .main .greet span {
-  background: linear-gradient(16deg, #4b90ff, #ff5546);
+  background: linear-gradient(
+    to right,
+    #fd6666,
+    #ff8a65,
+    #ffcc33,
+    #fff8b2,
+    #7fc97f,
+    #7fc9a6,
+    #70b8ff,
+    #c68cc8,
+    #f48fb1
+  );
   background-clip: text;
   -webkit-background-clip: text;
   -moz-background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+
+  background-size: 300% 300%;
+  animation: gradientAnimation 8s ease infinite;
 }
 
 .main .cards {
@@ -165,7 +192,7 @@
   border-radius: 4px;
   border: none;
   background-color: #f6f7f8;
-  background: linear-gradient(to right, #9ed7ff, #ffffff, #9ed7ff);
+  background: linear-gradient(to right, #d4d4d4, #ffffff, #d4d4d4);
   background-size: 800px 50px;
   height: 20px;
   animation: loader 3s infinite linear;

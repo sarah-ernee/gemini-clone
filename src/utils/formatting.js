@@ -8,7 +8,7 @@ export const escapeHtml = (unsafe) => {
 };
 
 export const formatResponse = (response) => {
-  let formattedResponse = response
+  return response
     .replace(/\*\*(.*?)\*\*/g, '<span style="font-weight: 550;">$1</span>')
     .replace(/##(.*?)\n/g, "<h3>$1</h3>")
     .replace(/^\*(.*?)$/gm, "<ul><li>$1</li></ul>")
@@ -28,7 +28,6 @@ export const formatResponse = (response) => {
       /`([^`]+)`/g,
       (match, code) => `<code class="inline-code">${escapeHtml(code)}</code>`
     )
-    .replace(/\n/g, "</br>");
-
-  return formattedResponse.replace(/<\/ul>\n<ul>/g, "");
+    .replace(/\n/g, "</br>")
+    .replace(/<\/ul>\n<ul>/g, "");
 };

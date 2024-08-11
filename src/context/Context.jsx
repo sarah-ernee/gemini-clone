@@ -14,7 +14,6 @@ const initialState = {
   resultData: [],
   prevPrompt: [],
   sidebarPrompt: [],
-  // isNewChat: false,
 };
 
 const functionPayload = (state, action, key) => {
@@ -98,34 +97,41 @@ const ContextProvider = (props) => {
 
     dispatch({
       type: "SET_RESULT",
-      payload: (prevState) => [...prevState.resultData, ""],
+      payload: (prevState) => {
+        const newData = [...prevState.resultData];
+        if (
+          newData.length === 0 ||
+          typeof newData[newData.length - 1] !== "string"
+        ) {
+          newData.push("");
+        }
+        return newData;
+      },
     });
+
+    // Prevent ',' affix at the start of consecutive responses
+    // Overwrites first item which is " " for new result coming in
+    const responseIndex =
+      state.resultData.length > 0 ? state.resultData.length - 1 : 0;
 
     for (let i = 0; i < newResponseArray.length; i++) {
       const nextWord = newResponseArray[i];
-      typingEffect(
-        i,
-        nextWord + " ",
-        newResponseArray.length,
-        state.resultData.length
-      );
+      typingEffect(i, nextWord + " ", newResponseArray.length, responseIndex);
     }
-
-    // Prevent undefined at the start of response
-    // dispatch({
-    //   type: "SET_RESULT",
-    //   payload: (prevState) => [...prevState.resultData, ""],
-    // });
   };
 
   const typingEffect = (wordIndex, nextWord, totalWords, responseIndex) => {
     const timeout = setTimeout(() => {
-      if (!nextWord) return;
+      if (nextWord == undefined) return;
 
       dispatch({
         type: "SET_RESULT",
         payload: (prevState) => {
           const newData = [...prevState.resultData];
+          // Prevent undefined at the start of string - placeholder while result is being typed out
+          if (typeof newData[responseIndex] !== "string") {
+            newData[responseIndex] = "";
+          }
           newData[responseIndex] += nextWord;
           return newData;
         },

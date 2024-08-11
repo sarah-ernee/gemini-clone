@@ -82,7 +82,7 @@ const Result = () => {
 
     scrollToBottom();
   }, [state.resultData, autoScroll]);
-
+  
   return (
     <div className="result" ref={resultRef}>
       {state.prevPrompt.map((prompt, index) => (
@@ -97,7 +97,15 @@ const Result = () => {
           </div>
           <div className="result-data">
             <img src={assets.gemini_icon} />
-            <p dangerouslySetInnerHTML={{ __html: state.resultData }}></p>
+            {state.loading ? (
+              <div className="loader">
+                <hr />
+                <hr />
+                <hr />
+              </div>
+            ) : (
+              <p dangerouslySetInnerHTML={{ __html: state.resultData }}></p>
+            )}
           </div>
         </div>
       ))}
