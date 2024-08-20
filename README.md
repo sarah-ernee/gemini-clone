@@ -1,9 +1,9 @@
-## Gemini Clone
+# Gemini Clone
 A clone chat bot interface using Gemini API that stores user prompts on Local Storage. Given the many states involved, this project manages them using React function reducers. 
 
 Project deployed on Vercel. 
 
-# Cloning & Navigation
+## Cloning & Navigation
 1. Run `npm install` to install necessary dependencies.
 2. Serve localhost with `npm run dev`.
    
@@ -11,7 +11,7 @@ Project deployed on Vercel.
 - Context file resides in `src/context` where most of the state logic is done.
 - `src/utils` contains the formatting code block to keep the context file clean.
 
-# Future Implementation
+## Future Implementation
 Some features that could be improved given more time would be the following:
 
 1. Continuous conversational threads.
@@ -19,7 +19,7 @@ Some features that could be improved given more time would be the following:
 3. Faux userbase to allow logins and logouts.
 4. Dark and light mode options.
 
-# React + Vite
+## React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
